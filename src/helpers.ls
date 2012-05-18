@@ -103,7 +103,7 @@ sortByBefore = (config, a, b) ->
 #
 #   sort ['b.coffee', 'c.coffee', 'a.coffee'],
 #     before: ['a.coffee'], after: ['b.coffee']
-#   # => ['a.coffee', 'c.coffee', 'b.coffee']
+#   # ~> ['a.coffee', 'c.coffee', 'b.coffee']
 # 
 # Returns new sorted array.
 exports.sortByConfig = (files, config) ->
@@ -174,7 +174,7 @@ exports.replaceSlashes = replaceSlashes = (config) ->
   config
 
 exports.setConfigDefaults = setConfigDefaults = (config, configPath) ->
-  join = (parent, name) =>
+  join = (parent, name) ~>
     sysPath.join config.paths[parent], name
 
   if config.buildPath?

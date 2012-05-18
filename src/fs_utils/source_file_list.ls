@@ -11,7 +11,7 @@ module.exports = class SourceFileList extends EventEmitter
   # as a one compilation.
   RESET_TIME: 100
 
-  constructor: (@config) ->
+  (@config) ->
     @files = []
     @on 'change', @_change
     @on 'unlink', @_unlink
@@ -26,30 +26,30 @@ module.exports = class SourceFileList extends EventEmitter
       when '[object String]'
         path is test
       when '[object Array]'
-        test.some((subTest) => @_ignored path, subTest)
+        test.some((subTest) ~> @_ignored path, subTest)
       else
         no
 
   # Called every time any file was changed.
   # Emits `ready` event after `RESET_TIME`.
-  _resetTimer: =>
+  _resetTimer: ~>
     clearTimeout @timer if @timer?
-    @timer = setTimeout (=> @emit 'ready'), @RESET_TIME
+    @timer = setTimeout (~> @emit 'ready'), @RESET_TIME
 
   _getByPath: (path) ->
     @files.filter((file) -> file.path is path)[0]
 
   _compileDependentFiles: (path) ->
     @files
-      .filter (dependent) =>
+      .filter (dependent) ~>
         dependent.cache.dependencies.length
-      .filter (dependent) =>
+      .filter (dependent) ~>
         path in dependent.cache.dependencies
       .forEach(@_compile)
     @_resetTimer()
 
-  _compile: (file) =>
-    file.compile (error) =>
+  _compile: (file) ~>
+    file.compile (error) ~>
       logger.debug "Compiled file '#{file.path}'"
       if error?
         return logger.error "#{file.compilerName} failed in '#{file.path}' -- 
@@ -63,13 +63,13 @@ module.exports = class SourceFileList extends EventEmitter
     @files.push file
     file
 
-  _change: (path, compiler, isHelper) =>
+  _change: (path, compiler, isHelper) ~>
     return @_compileDependentFiles path if (@_ignored path) or not compiler
     file = @_getByPath path
     @_compile file ? @_add path, compiler, isHelper
     @_resetTimer()
 
-  _unlink: (path) =>
+  _unlink: (path) ~>
     return @_compileDependentFiles path if @_ignored path
     file = @_getByPath path
     @files.splice(@files.indexOf(file), 1)

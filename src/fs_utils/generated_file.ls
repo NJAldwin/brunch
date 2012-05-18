@@ -22,12 +22,12 @@ module.exports = class GeneratedFile
   # sourceFiles - array of `fs_utils.SourceFile`-s.
   # config      - parsed application config.
   # 
-  constructor: (@path, @sourceFiles, @config, minifiers) ->    
+  (@path, @sourceFiles, @config, minifiers) ->    
     @type = if @sourceFiles.some((file) -> file.type is 'javascript')
       'javascript'
     else
       'stylesheet'
-    @minifier = minifiers.filter((minifier) => minifier.type is @type)[0]
+    @minifier = minifiers.filter((minifier) ~> minifier.type is @type)[0]
     Object.freeze(this)
 
   _extractOrder: (files, config) ->
@@ -60,7 +60,7 @@ module.exports = class GeneratedFile
     logger.debug "Joining files '#{sortedPaths}' to '#{@path}'"
     joined = sourceFiles.map((file) -> file.cache.data).join('')
     if @type is 'javascript'
-      getRequireDefinition (error, requireDefinition) =>
+      getRequireDefinition (error, requireDefinition) ~>
         callback null, requireDefinition + joined
     else
       callback null, joined
@@ -84,8 +84,8 @@ module.exports = class GeneratedFile
   # 
   # Returns nothing.
   write: (callback) ->
-    @_joinSourceFiles (error, joined) =>
+    @_joinSourceFiles (error, joined) ~>
       return callback error if error?
-      @_minify joined, (error, data) =>
+      @_minify joined, (error, data) ~>
         return callback error if error?
         common.writeFile @path, data, callback
