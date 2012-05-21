@@ -54,7 +54,7 @@ sortAlphabetically = (a, b) ->
 # If item path starts with 'vendor', it has bigger priority.
 # TODO: check for config.vendorPath
 sortByVendor = (config, a, b) ->
-  vendor = config.vendorPaths.slice().sort(sortAlphabetically)
+  vendor = config.vendorPaths.slice!.sort(sortAlphabetically)
   aIsVendor = vendor.some((path) -> exports.startsWith a, path)
   bIsVendor = vendor.some((path) -> exports.startsWith b, path)
   if aIsVendor and not bIsVendor
@@ -112,25 +112,25 @@ exports.sortByConfig = (files, config) ->
       before: config.before ? [] 
       after: config.after ? []
       vendorPaths: config.vendorPaths ? []
-    files.slice().sort (a, b) -> sortByBefore cfg, a, b
+    files.slice!.sort (a, b) -> sortByBefore cfg, a, b
   else
     files
 
 exports.install = install = (rootPath, callback = (->)) ->
-  prevDir = process.cwd()
+  prevDir = process.cwd!
   logger.info 'Installing packages...'
   process.chdir rootPath
   # Install node packages.
   exec 'npm install', (error, stdout, stderr) ->
     process.chdir prevDir
-    return callback stderr.toString() if error?
+    return callback stderr.toString! if error?
     callback null, stdout
 
 startDefaultServer = (port, path, callback) ->
-  server = express.createServer()
+  server = express.createServer!
   server.use (request, response, next) ->
     response.header 'Cache-Control', 'no-cache'
-    next()
+    next!
   server.use express.static path
   server.all '/*', (request, response) ->
     response.sendfile sysPath.join path, 'index.html'
@@ -141,7 +141,7 @@ startDefaultServer = (port, path, callback) ->
 exports.startServer = (config, callback = (->)) ->
   onListening = ->
     logger.info "application started on http://localhost:#{config.server.port}/"
-    callback()
+    callback!
   if config.server.path
     try
       server = require sysPath.resolve config.server.path

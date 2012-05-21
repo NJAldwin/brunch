@@ -9,7 +9,7 @@ logger = require '../logger'
 module.exports = class SourceFileList extends EventEmitter
   # Maximum time between changes of two files that will be considered
   # as a one compilation.
-  RESET_TIME: 100
+  RESET_TIME: 100ms
 
   (@config) ->
     @files = []
@@ -46,7 +46,7 @@ module.exports = class SourceFileList extends EventEmitter
       .filter (dependent) ~>
         path in dependent.cache.dependencies
       .forEach(@_compile)
-    @_resetTimer()
+    @_resetTimer!
 
   _compile: (file) ~>
     file.compile (error) ~>
@@ -55,7 +55,7 @@ module.exports = class SourceFileList extends EventEmitter
         return logger.error "#{file.compilerName} failed in '#{file.path}' -- 
 #{error}"
       @_compileDependentFiles file.path
-      @_resetTimer()
+      @_resetTimer!
 
   _add: (path, compiler, isHelper) ->
     isVendor = helpers.startsWith(path, @config.paths.vendor)
@@ -67,10 +67,10 @@ module.exports = class SourceFileList extends EventEmitter
     return @_compileDependentFiles path if (@_ignored path) or not compiler
     file = @_getByPath path
     @_compile file ? @_add path, compiler, isHelper
-    @_resetTimer()
+    @_resetTimer!
 
   _unlink: (path) ~>
     return @_compileDependentFiles path if @_ignored path
     file = @_getByPath path
     @files.splice(@files.indexOf(file), 1)
-    @_resetTimer()
+    @_resetTimer!

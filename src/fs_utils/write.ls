@@ -60,6 +60,6 @@ module.exports = write = (fileList, config, plugins, callback) ->
   minifiers = plugins.filter (plugin) -> !!plugin.minify
   files = getFiles fileList, config, minifiers
   writeFile = (file, callback) -> file.write callback
-  async.forEach files, writeFile, (error, results) ->
-    return callback error if error?
-    callback null, results
+  error, results <- async.forEach files, writeFile
+  return callback error if error?
+  callback null, results

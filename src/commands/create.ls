@@ -24,23 +24,23 @@ module.exports = create = (options, callback = (->)) ->
     logger.debug "Copying skeleton from #{skeletonPath}"
 
     copyDirectory = (from) ->
-      fs_utils.copyIfExists from, rootPath, no, (error) ->
-        return logger.error error if error?
-        logger.info 'Created brunch directory layout'
-        removeAndInstall rootPath, callback
+      error <- fs_utils.copyIfExists from, rootPath, no
+      return logger.error error if error?
+      logger.info 'Created brunch directory layout'
+      removeAndInstall rootPath, callback
 
     mkdirp rootPath, 0o755, (error) ->
       return logger.error error if error?
-      fs_utils.exists skeletonPath, (exists) ->
-        return logger.error "Skeleton '#{skeleton}' doesn't exist" unless exists
-        copyDirectory skeletonPath
+      exists <- fs_utils.exists skeletonPath
+      return logger.error "Skeleton '#{skeleton}' doesn't exist" unless exists
+      copyDirectory skeletonPath
 
   cloneSkeleton = (URL) ->
     logger.debug "Cloning skeleton from git URL #{URL}"
-    exec "git clone #{URL} #{rootPath}", (error, stdout, stderr) ->
-      return logger.error "Git clone error: #{stderr.toString()}" if error?
-      logger.info 'Created brunch directory layout'
-      removeAndInstall rootPath, callback
+    (error, stdout, stderr) <- exec "git clone #{URL} #{rootPath}"
+    return logger.error "Git clone error: #{stderr.toString!}" if error?
+    logger.info 'Created brunch directory layout'
+    removeAndInstall rootPath, callback
 
   fs_utils.exists rootPath, (exists) ->
     return logger.error "Directory '#{rootPath}' already exists" if exists

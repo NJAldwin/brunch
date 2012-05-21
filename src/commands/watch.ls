@@ -19,14 +19,14 @@ getPluginIncludes = (plugins) ->
     .map (plugin) ->
       paths = plugin.include
       if typeof paths is 'function'
-        paths()
+        paths!
       else
         paths
     .filter (paths) ->
       paths?
     # Flatten the array.
     .reduce (acc, elem) ->
-      acc.concat(if Array.isArray(elem) then elem else [elem])
+      acc +++ (if Array.isArray(elem) then elem else [elem])
     , []
 
 class BrunchWatcher
@@ -57,19 +57,19 @@ class BrunchWatcher
       callback error
 
   changeFileList: (path, isHelper = no) ~>
-    @start = Date.now()
+    @start = Date.now!
     compiler = @plugins.filter(isCompilerFor.bind(null, path))[0]
     @fileList.emit 'change', path, compiler, isHelper
 
   removeFromFileList: (path) ~>
-    @start = Date.now()
+    @start = Date.now!
     @fileList.emit 'unlink', path
 
   initWatcher: (callback) ->
     watched = [
       @config.paths.app, @config.paths.vendor,
       @config.paths.config, @config.paths.packageConfig
-    ].concat(@config.paths.assets)
+    ] +++ @config.paths.assets
 
     async.filter watched, fs_utils.exists, (watchedFiles) ~>
       ignored = fs_utils.ignored
@@ -108,34 +108,34 @@ class BrunchWatcher
       async.forEach paths.assets, copyAssets, (error) ~>
         return logger.error "Asset copying failed: #{error}" if error?
         logger.info "compiled."
-        logger.debug "compilation time: #{Date.now() - @start}ms"
-        @watcher.close() unless @persistent
+        logger.debug "compilation time: #{Date.now! - @start}ms"
+        @watcher.close! unless @persistent
         @onCompile result
 
   watch: ->
-    @initServer()
+    @initServer!
     @initPlugins ~>
-      @initFileList()
+      @initFileList!
       getPluginIncludes(@plugins).forEach((path) ~> @changeFileList path, yes)
-      @initWatcher()
+      @initWatcher!
       @fileList.on 'ready', @compile
 
   close: ->
-    @server?.close()
-    @watcher.close()
+    @server?.close!
+    @watcher.close!
 
   reload: (reInstall = no) ->
     reWatch = ~>
-      @close()
-      @clone().watch()
+      @close!
+      @clone!.watch!
     if reInstall
       helpers.install @config.paths.root, reWatch
     else
-      reWatch()
+      reWatch!
 
 module.exports = watch = (persistent, options, callback = (->)) ->
   deprecated = (param) ->
     if options[param]
       logger.warn "--#{param} is deprecated. Use config option."
   deprecated 'output'
-  new BrunchWatcher(persistent, options, callback).watch()
+  new BrunchWatcher(persistent, options, callback).watch!

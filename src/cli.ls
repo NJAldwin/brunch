@@ -132,4 +132,4 @@ the server would run'
 
 # The function would be executed every time user run `bin/brunch`.
 exports.run = ->
-  argumentum.load(commandLineConfig).parse()
+  argumentum.load(commandLineConfig).parse!

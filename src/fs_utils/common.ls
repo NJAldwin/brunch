@@ -22,12 +22,12 @@ exports.exists = fs.exists or sysPath.exists
 exports.writeFile = (path, data, callback) ->
   logger.debug "Writing file '#{path}'"
   write = (callback) -> fs.writeFile path, data, callback
-  write (error) ->
-    return callback null, path, data unless error?
-    mkdirp (sysPath.dirname path), 0o755, (error) ->
-      return callback error if error?
-      write (error) ->
-        callback error, path, data
+  error <- write
+  return callback null, path, data unless error?
+  error <- mkdirp (sysPath.dirname path), 0o755
+  return callback error if error?
+  error <- write
+  callback error, path, data
 
 # RegExp that would filter invalid files (dotfiles, emacs caches etc).
 ignoredRe = /(^(\.|#)|__$)/;
@@ -37,6 +37,6 @@ exports.ignored = ignored = (path) ->
 
 exports.copyIfExists = (source, destination, filter = yes, callback) ->
   options = if filter then {filter: ((path) -> not ignored path)} else {}
-  sysPath.exists source, (exists) ->
-    return callback() unless exists
-    ncp source, destination, options, callback
+  exists <- sysPath.exists source
+  return callback! unless exists
+  ncp source, destination, options, callback

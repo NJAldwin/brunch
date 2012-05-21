@@ -50,13 +50,16 @@ module.exports = class SourceFile
   # in order to do compilation only if the file was changed.
   compile: (callback) ->
     realPath = if @isHelper then @realPath else @path
-    fs.readFile realPath, (error, buffer) ~>
-      return callback "Read error: #{error}" if error?
-      fileContent = buffer.toString()
-      @compiler.compile fileContent, @path, (error, result) ~>
-        return callback "Compile error: #{error}" if error?
-        @_getDependencies fileContent, @path, (error, dependencies) ~>
-          return callback "GetDeps error: #{error}" if error?
-          @cache.dependencies = dependencies
-          @cache.data = @_wrap result if result?
-          callback null, @cache.data
+    error, buffer <~ fs.readFile realPath
+
+    return callback "Read error: #{error}" if error?
+    fileContent = buffer.toString!
+
+    error, result <~ @compiler.compile fileContent, @path
+    return callback "Compile error: #{error}" if error?
+
+    error, dependencies <~ @_getDependencies fileContent, @path
+    return callback "GetDeps error: #{error}" if error?
+    @cache.dependencies = dependencies
+    @cache.data = @_wrap result if result?
+    callback null, @cache.data

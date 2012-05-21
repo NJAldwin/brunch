@@ -148,7 +148,7 @@ getGenerator = (config, plugins) ->
 
   unless categories[framework]?
     return logger.error "Framework #{framework} isn't supported. Use one of: 
-#{frameworkChocies()}"
+#{frameworkChocies!}"
 
   getExtension = (type) ->
     category = categories[framework]?[type]
@@ -182,7 +182,7 @@ getGenerator = (config, plugins) ->
     else
       ''
 
-    getPaths = getGeneratorMap()[framework]?[type]
+    getPaths = getGeneratorMap![framework]?[type]
     paths = (getPaths? name, pluralName) or []
     nonStrings = paths.filter (path) -> typeof path isnt 'string'
     strings = paths
@@ -194,7 +194,7 @@ getGenerator = (config, plugins) ->
         file = {type, extension, path, data}
         logger.debug "Scaffolding", file
         file
-    strings.concat(nonStrings)
+    strings +++ nonStrings
 
   generator
 
@@ -203,18 +203,18 @@ generateFile = (path, data, callback) ->
   write = ->
     logger.info "create #{path}"
     fs.writeFile path, data, callback
-  fs_utils.exists parentDir, (exists) ->
-    return write() if exists
-    logger.info "init #{parentDir}"
-    mkdirp parentDir, 0o755, (error) ->
-      return logger.error if error?
-      write()
+  exists <- fs_utils.exists parentDir
+  return write! if exists
+  logger.info "init #{parentDir}"
+  error <- mkdirp parentDir, 0o755
+  return logger.error if error?
+  write!
 
 destroyFile = (path, callback) ->
-  fs.unlink path, (error) ->
-    return logger.error "#{error}" if error?
-    logger.info "destroy #{path}"
-    callback error
+  error <- fs.unlink path
+  return logger.error "#{error}" if error?
+  logger.info "destroy #{path}"
+  callback error
 
 module.exports = scaffold = (rollback, options, callback = (->)) ->
   {type, name, pluralName, parentDir, configPath} = options
@@ -223,7 +223,7 @@ module.exports = scaffold = (rollback, options, callback = (->)) ->
     if name is pluralName
       return logger.error "Plural form must be declared for '#{name}'"
   config = helpers.loadConfig configPath
-  return callback() unless config?
+  return callback! unless config?
 
   generateOrDestroyFile = (file, callback) ->
     if rollback
@@ -231,10 +231,10 @@ module.exports = scaffold = (rollback, options, callback = (->)) ->
     else
       generateFile file.path, file.data, callback
 
-  helpers.loadPlugins config, (error, plugins) ->
-    return logger.error error if error?
-    generator = getGenerator config, plugins
-    files = generator type, name, pluralName
-    async.forEach files, generateOrDestroyFile, (error) ->
-      return logger.error error if error?
-      callback null, files
+  (error, plugins) <- helpers.loadPlugins config
+  return logger.error error if error?
+  generator = getGenerator config, plugins
+  files = generator type, name, pluralName
+  (error) <- async.forEach files, generateOrDestroyFile
+  return logger.error error if error?
+  callback null, files
